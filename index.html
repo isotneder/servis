@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Servis Canlı Takip</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { font-family: Arial; text-align:center; background:#111; color:white; }
+button { padding:12px 20px; margin:10px; border:none; border-radius:8px; font-size:16px; }
+#map { height:400px; width:100%; margin-top:15px; border-radius:10px; }
+.bus { background:#e74c3c; color:white; }
+.passenger { background:#3498db; color:white; }
+.board { background:#2ecc71; color:white; }
+</style>
+</head>
+<body>
+
+<h2>🚐 Servis Canlı Takip</h2>
+
+<button class="bus" onclick="startBus()">Servis Yayını Başlat</button>
+<button class="passenger" onclick="startPassenger()">Yolcu Takibi Başlat</button>
+<button class="board" onclick="boardBus()">Bindim</button>
+
+<h3 id="status">Durum: Bekleniyor</h3>
+<div id="map"></div>
+
+<audio id="alarmSound">
+<source src="https://www.soundjay.com/buttons/sounds/beep-07.mp3">
+</audio>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_dJZyISsd1DtR2cWw8VjSSBNTbdeS0xw",
+  authDomain: "servistakip-e5926.firebaseapp.com",
+  databaseURL: "https://servistakip-e5926-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "servistakip-e5926",
+  storageBucket: "servistakip-e5926.firebasestorage.app",
+  messagingSenderId: "278744315160",
+  appId: "1:278744315160:web:21826565505ee6d2b51a6d"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let map;
+let busMarker;
+let passengerMarker;
+let alarmPlayed = false;
+
+window.initMap = function() {
+    map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 15,
+        center: { lat: 39.9208, lng: 32.8541 }
+    });
+}
+window.initMap = initMap;
+
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3;
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c;
+}
+
+// 🚐 SERVİS
+window.startBus = function() {
+    navigator.geolocation.watchPosition((pos) => {
+        const data = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+        };
+
+        set(ref(db, 'bus/location'), data);
+
+        if (!busMarker) {
+            busMarker = new google.maps.Marker({
+                position: data,
+                map: map,
+                label: "🚐"
+            });
+        } else {
+            busMarker.setPosition(data);
+        }
+
+        document.getElementById("status").innerText = "Servis yayın yapıyor...";
+    });
+}
+
+// 👤 YOLCU
+window.startPassenger = function() {
+
+    navigator.geolocation.getCurrentPosition((homePos) => {
+
+        const passengerLocation = {
+            lat: homePos.coords.latitude,
+            lng: homePos.coords.longitude
+        };
+
+        passengerMarker = new google.maps.Marker({
+            position: passengerLocation,
+            map: map,
+            label: "🏠"
+        });
+
+        onValue(ref(db, 'bus/location'), (snapshot) => {
+
+            const bus = snapshot.val();
+            if (!bus) return;
+
+            if (!busMarker) {
+                busMarker = new google.maps.Marker({
+                    position: bus,
+                    map: map,
+                    label: "🚐"
+                });
+            } else {
+                busMarker.setPosition(bus);
+            }
+
+            let distance = getDistance(
+                passengerLocation.lat,
+                passengerLocation.lng,
+                bus.lat,
+                bus.lng
+            );
+
+            document.getElementById("status").innerText =
+                "Mesafe: " + Math.round(distance) + " metre";
+
+            if (distance <= 200 && !alarmPlayed) {
+                document.getElementById("alarmSound").play();
+                alert("🚐 Servis yaklaştı!");
+                alarmPlayed = true;
+            }
+
+        });
+    });
+}
+
+// 🔘 BİNDİM
+window.boardBus = function() {
+    alarmPlayed = true;
+    document.getElementById("status").innerText = "Bindim. Alarm kapandı.";
+}
+
+</script>
+
+<script async defer
+src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCy_6rHcjQLfjMvZfV9Wr_FYbyJW4zh3hE">
+</script>
+
+</body>
+</html>
