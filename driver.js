@@ -155,7 +155,7 @@ function setFollowMode(enabled) {
     // ignore storage errors in strict browser modes
   }
   if (els.followBtn) {
-    els.followBtn.textContent = state.followMode ? "Navigasyon Kapat" : "Navigasyon Ac";
+    els.followBtn.textContent = state.followMode ? "Navigasyon Kapat" : "Navigasyon Aç";
     els.followBtn.classList.toggle("primary", state.followMode);
     els.followBtn.classList.toggle("ghost", !state.followMode);
   }
@@ -209,7 +209,7 @@ function setMapType(nextType) {
     // ignore storage errors in strict browser modes
   }
   if (els.mapTypeBtn) {
-    els.mapTypeBtn.textContent = mapType === "satellite" ? "Normal Harita" : "Uydu Ac";
+    els.mapTypeBtn.textContent = mapType === "satellite" ? "Normal Harita" : "Uydu Aç";
   }
 }
 
@@ -380,12 +380,12 @@ function setSelectedPoint(latlng) {
 
 function fillLiveInfo(payload) {
   els.coords.textContent = formatCoord(payload.lat, payload.lng);
-  els.last.textContent = `Son gonderim: ${formatTime(payload.ts)}`;
+  els.last.textContent = `Son gönderim: ${formatTime(payload.ts)}`;
 }
 
 function clearLiveInfo() {
   els.coords.textContent = "--";
-  els.last.textContent = "Son gonderim: --";
+  els.last.textContent = "Son gönderim: --";
   if (map.hasLayer(liveMarker)) {
     map.removeLayer(liveMarker);
   }
@@ -412,7 +412,7 @@ function renderEmployeeList() {
   els.employeeList.innerHTML = "";
 
   if (!employees.length) {
-    els.employeeList.textContent = "Eleman kaydi yok.";
+    els.employeeList.textContent = "Eleman kaydı yok.";
     updateSummary();
     renderEmployeeMarkers();
     return;
@@ -450,11 +450,11 @@ function renderEmployeeList() {
     const actions = document.createElement("div");
     actions.className = "employee-actions";
 
-    const upButton = buildActionButton("Yukari", "ghost", "route-up", employee.id);
+    const upButton = buildActionButton("Yukarı", "ghost", "route-up", employee.id);
     upButton.disabled = index === 0;
     actions.appendChild(upButton);
 
-    const downButton = buildActionButton("Asagi", "ghost", "route-down", employee.id);
+    const downButton = buildActionButton("Aşağı", "ghost", "route-down", employee.id);
     downButton.disabled = index === employees.length - 1;
     actions.appendChild(downButton);
 

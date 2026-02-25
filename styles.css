@@ -628,6 +628,66 @@ body.driver #driverMap {
     padding: 11px 12px;
   }
 
+  body:not(.driver) .hero {
+    padding: 10px;
+    gap: 10px;
+    border-radius: 14px;
+  }
+
+  body:not(.driver) .brand {
+    gap: 8px;
+  }
+
+  body:not(.driver) .logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  body:not(.driver) .title {
+    font-size: 15px;
+    line-height: 1.15;
+  }
+
+  body:not(.driver) .subtitle {
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  body:not(.driver) .hero-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  body:not(.driver) .hero-actions > * {
+    min-width: 0;
+  }
+
+  body:not(.driver) .hero-actions .status-pill {
+    order: 0;
+    width: 100%;
+    min-height: 40px;
+    border-radius: 12px;
+    padding: 8px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+  }
+
+  body:not(.driver) .hero-actions .btn {
+    flex: none;
+    width: 100%;
+    min-height: 40px;
+    border-radius: 12px;
+    padding: 8px 6px;
+    font-size: 12px;
+    line-height: 1.15;
+  }
+
   .map-card,
   #map,
   #driverMap {
@@ -781,6 +841,27 @@ body.driver #driverMap {
 @media (max-width: 420px) {
   .hero-actions .btn {
     flex: 1 1 100%;
+  }
+
+  body:not(.driver) .hero-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  body:not(.driver) .hero-actions .status-pill {
+    min-height: 36px;
+    border-radius: 10px;
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+
+  body:not(.driver) .hero-actions .btn {
+    flex: none;
+    min-height: 36px;
+    border-radius: 10px;
+    padding: 6px 4px;
+    font-size: 11px;
   }
 
   .map-overlay {

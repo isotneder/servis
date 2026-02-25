@@ -1,5 +1,5 @@
 ﻿window.__APP_CONFIG = {
-  appName: "Alpozler Kahramankazan Servis Takip Programi",
+  appName: "Alpozler Kahramankazan Servis Takip Programı",
   singleServiceId: "ana-servis",
   defaultCenter: { lat: 40.15, lng: 32.68 },
   defaultZoom: 12,

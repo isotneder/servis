@@ -220,7 +220,7 @@ function setMapType(nextType) {
     // ignore storage errors in strict browser modes
   }
   if (els.mapTypeBtn) {
-    els.mapTypeBtn.textContent = mapType === "satellite" ? "Normal Harita" : "Uydu Ac";
+    els.mapTypeBtn.textContent = mapType === "satellite" ? "Normal Harita" : "Uydu Aç";
   }
 }
 
@@ -443,14 +443,14 @@ function updateMetrics() {
 
   if (state.driverOfflineReason) {
     if (els.distanceValue) els.distanceValue.textContent = "--";
-    if (els.etaValue) els.etaValue.textContent = "ETA: --";
-    if (els.alertStatus) els.alertStatus.textContent = "Sofor konum paylasmiyor";
+    if (els.etaValue) els.etaValue.textContent = "Tahmini Varış: --";
+    if (els.alertStatus) els.alertStatus.textContent = "Şoför konum paylaşmıyor";
     return;
   }
 
   if (!state.bus) {
     if (els.distanceValue) els.distanceValue.textContent = "--";
-    if (els.etaValue) els.etaValue.textContent = "ETA: --";
+    if (els.etaValue) els.etaValue.textContent = "Tahmini Varış: --";
     if (els.alertStatus) els.alertStatus.textContent = "Beklemede";
     return;
   }
@@ -462,7 +462,7 @@ function updateMetrics() {
 
   if (!Number.isFinite(distance)) {
     if (els.distanceValue) els.distanceValue.textContent = "--";
-    if (els.etaValue) els.etaValue.textContent = "ETA: --";
+    if (els.etaValue) els.etaValue.textContent = "Tahmini Varış: --";
     if (els.alertStatus) els.alertStatus.textContent = "Durak bekleniyor";
     state.announced = false;
     state.lastAnnouncedTargetKey = null;
@@ -470,10 +470,10 @@ function updateMetrics() {
   }
 
   if (els.distanceValue) els.distanceValue.textContent = formatDistance(distance);
-  if (els.etaValue) els.etaValue.textContent = `ETA: ${formatEta(distance)}`;
+  if (els.etaValue) els.etaValue.textContent = `Tahmini Varış: ${formatEta(distance)}`;
 
   if (distance <= radius) {
-    if (els.alertStatus) els.alertStatus.textContent = "Yakin";
+    if (els.alertStatus) els.alertStatus.textContent = "Yakın";
     maybeAnnounceStop(target.key, target.name || "durak");
   } else {
     if (els.alertStatus) els.alertStatus.textContent = "Beklemede";

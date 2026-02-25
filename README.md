@@ -1,4 +1,4 @@
-﻿# Alpozler Kahramankazan Servis Takip Programi
+﻿# Alpozler Kahramankazan Servis Takip Programı
 
 Bu proje Netlify/GitHub Pages uzerinde calisan statik bir web uygulamasidir.
 Iki rol vardir:
