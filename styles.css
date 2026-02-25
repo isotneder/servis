@@ -484,11 +484,18 @@ body.driver .grid {
 }
 
 @media (max-width: 980px) {
-  .grid {
-    grid-template-columns: 1fr;
+  .app {
+    padding: 20px 14px 28px;
   }
 
-  #map {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .map-card,
+  #map,
+  #driverMap {
     min-height: 420px;
   }
 
@@ -505,6 +512,168 @@ body.driver .grid {
   .foot {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 680px) {
+  body::after {
+    background-size: 28px 28px;
+    opacity: 0.38;
+  }
+
+  .app {
+    padding: 14px 10px 18px;
+  }
+
+  .hero {
+    padding: 14px;
+    border-radius: 16px;
+    gap: 12px;
+  }
+
+  .brand {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .title {
+    font-size: 17px;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 12px;
+  }
+
+  .hero-actions {
+    gap: 8px;
+  }
+
+  .hero-actions .status-pill {
+    width: 100%;
+    text-align: center;
+    order: -1;
+  }
+
+  .hero-actions .btn {
+    flex: 1 1 calc(50% - 8px);
+    min-height: 44px;
+    padding: 11px 12px;
+  }
+
+  .map-card,
+  #map,
+  #driverMap {
+    min-height: 360px;
+    border-radius: 16px;
+  }
+
+  .map-overlay {
+    top: auto;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .mini-card {
+    padding: 8px 10px;
+    border-radius: 10px;
+  }
+
+  .mini-label {
+    font-size: 10px;
+  }
+
+  .mini-value {
+    font-size: 16px;
+  }
+
+  .mini-sub {
+    font-size: 11px;
+  }
+
+  .panel {
+    gap: 12px;
+  }
+
+  .panel-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .card-title {
+    font-size: 15px;
+  }
+
+  .row {
+    margin-top: 10px;
+    align-items: flex-start;
+  }
+
+  .row.split {
+    gap: 8px;
+  }
+
+  .row.split .btn {
+    flex: 1 1 100%;
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .input {
+    min-height: 42px;
+    font-size: 16px;
+  }
+
+  .employee-list {
+    max-height: 280px;
+  }
+
+  .employee-row {
+    border-radius: 12px;
+    padding: 9px;
+  }
+
+  .employee-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .btn.tiny {
+    width: 100%;
+    min-height: 36px;
+    padding: 8px;
+  }
+
+  .foot {
+    margin-top: 14px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 420px) {
+  .hero-actions .btn {
+    flex: 1 1 100%;
+  }
+
+  .map-overlay {
+    grid-template-columns: 1fr;
+  }
+
+  .map-card,
+  #map,
+  #driverMap {
+    min-height: 330px;
   }
 }
 
