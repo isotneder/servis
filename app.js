@@ -117,7 +117,7 @@ if (els.radiusInput) {
   });
 }
 if (els.testVoice) {
-  els.testVoice.addEventListener("click", () => speak("Servis yaklasti. Hazir ol."));
+  els.testVoice.addEventListener("click", () => speak("Servis yaklaştı. Hazır ol."));
 }
 if (els.tabMap && els.tabSettings) {
   els.tabMap.addEventListener("click", () => setHomeView("map"));
@@ -533,7 +533,7 @@ function maybeAnnounceStop(targetKey, targetName) {
 function maybeAnnounceDriverOffline() {
   if (!els.voiceToggle || !els.voiceToggle.checked) return;
   if (state.driverOfflineAnnounced) return;
-  speak("Uyari. Sofor konum paylasmiyor.");
+  speak("Uyarı! Şoför konum paylaşmıyor.");
   state.driverOfflineAnnounced = true;
 }
 
@@ -671,15 +671,15 @@ function evaluateDriverSharing() {
     return;
   }
   if (state.driverSharingActive === false) {
-    setDriverOffline("Sofor konum paylasmiyor.");
+    setDriverOffline("Şoför konum paylaşmıyor.");
     return;
   }
   if (state.driverSharingActive !== true || !state.lastLiveTs) {
-    setDriverOffline("Sofor henuz konum paylasmadi.");
+    setDriverOffline("Şoför henuz konum paylaşmadı.");
     return;
   }
   if (Date.now() - state.lastLiveTs > driverOfflineTimeoutMs) {
-    setDriverOffline("Sofor konum paylasmiyor.");
+    setDriverOffline("Şoför konum paylaşmıyor.");
     return;
   }
   clearDriverOffline();
@@ -707,14 +707,14 @@ async function connectFirebaseAuto() {
         if (!data) {
           state.driverSharingActive = null;
           state.lastLiveTs = 0;
-          setDriverOffline("Sofor henuz konum paylasmadi.");
+          setDriverOffline("Şoför henuz konum paylaşmadı.");
           return;
         }
 
         if (data.isSharing === false) {
           state.driverSharingActive = false;
           state.lastLiveTs = Number(data.ts || 0);
-          setDriverOffline("Sofor konum paylasmiyor.");
+          setDriverOffline("Şoför konum paylaşmıyor.");
           return;
         }
 
@@ -734,10 +734,10 @@ async function connectFirebaseAuto() {
 
         state.driverSharingActive = null;
         state.lastLiveTs = 0;
-        setDriverOffline("Sofor henuz konum paylasmadi.");
+        setDriverOffline("Şoför henuz konum paylaşmadı.");
       },
       (error) => {
-        setDriverOffline(`Canli veri hatasi: ${error.message}`);
+        setDriverOffline(`Canlı veri hatası: ${error.message}`);
       }
     );
 
@@ -761,16 +761,16 @@ async function connectFirebaseAuto() {
         updateMetrics();
       },
       (error) => {
-        setSystemNote(`Durum verisi hatasi: ${error.message}`);
+        setSystemNote(`Durum verisi hatası: ${error.message}`);
       }
     );
 
     setMode("live");
-    setSystemNote("Tek servis canli verisi izleniyor.");
+    setSystemNote("Tek servis canlı verisi izleniyor.");
     startShareMonitor();
     evaluateDriverSharing();
   } catch (error) {
     setMode("offline");
-    setSystemNote(`Firebase baglantisi basarisiz: ${error.message}`);
+    setSystemNote(`Firebase bağlantısı başarısız: ${error.message}`);
   }
 }
