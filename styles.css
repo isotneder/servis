@@ -684,9 +684,12 @@ body.driver #driverMap {
   }
 
   body:not(.driver) .mini-card {
-    padding: 6px 8px;
-    border-radius: 8px;
-    max-width: 150px;
+    padding: 5px 7px;
+    border-radius: 7px;
+    max-width: 138px;
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 12px rgba(17, 24, 39, 0.14);
+    backdrop-filter: blur(6px);
   }
 
   .mini-label {
@@ -694,7 +697,7 @@ body.driver #driverMap {
   }
 
   body:not(.driver) .mini-label {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .mini-value {
@@ -702,7 +705,7 @@ body.driver #driverMap {
   }
 
   body:not(.driver) .mini-value {
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.1;
   }
 
@@ -711,7 +714,7 @@ body.driver #driverMap {
   }
 
   body:not(.driver) .mini-sub {
-    font-size: 10px;
+    font-size: 9px;
     line-height: 1.2;
   }
 
@@ -801,16 +804,20 @@ body.driver #driverMap {
   }
 
   body:not(.driver) .mini-card {
-    max-width: 136px;
-    padding: 5px 7px;
+    max-width: 126px;
+    padding: 4px 6px;
+  }
+
+  body:not(.driver) .mini-label {
+    font-size: 7px;
   }
 
   body:not(.driver) .mini-value {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   body:not(.driver) .mini-sub {
-    font-size: 9px;
+    font-size: 8px;
   }
 }
 
