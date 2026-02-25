@@ -30,97 +30,52 @@
       </div>
     </header>
 
-    <main class="grid">
-      <section class="map-card">
-        <div id="map"></div>
-        <div class="map-overlay">
-          <div class="mini-card">
-            <div class="mini-label">Servise Uzaklik</div>
-            <div class="mini-value" id="distanceValue">--</div>
-            <div class="mini-sub" id="etaValue">ETA: --</div>
-            <div class="mini-sub" id="targetStopText">Hedef durak: --</div>
+    <div class="driver-tabs" role="tablist" aria-label="Ana ekran sekmeleri">
+      <button class="btn ghost active" id="indexTabMap" type="button" aria-selected="true">Harita</button>
+      <button class="btn ghost" id="indexTabSettings" type="button" aria-selected="false">Ayarlar</button>
+    </div>
+
+    <main class="driver-shell">
+      <section class="driver-view active" id="indexMapView">
+        <section class="map-card">
+          <div id="map"></div>
+          <div class="map-overlay">
+            <div class="mini-card">
+              <div class="mini-label">Servise Uzaklik</div>
+              <div class="mini-value" id="distanceValue">--</div>
+              <div class="mini-sub" id="etaValue">ETA: --</div>
+            </div>
+            <div class="mini-card">
+              <div class="mini-label">Durum</div>
+              <div class="mini-value" id="alertStatus">Beklemede</div>
+              <div class="mini-sub" id="targetStopText">Hedef durak: --</div>
+            </div>
           </div>
-          <div class="mini-card">
-            <div class="mini-label">Durum</div>
-            <div class="mini-value" id="alertStatus">Beklemede</div>
-            <div class="mini-sub">Yari cap: <span id="radiusText">--</span></div>
-            <div class="mini-sub" id="todayStatus">Bugun: --</div>
-          </div>
-        </div>
+        </section>
       </section>
 
-      <aside class="panel">
-        <div class="panel-card">
-          <div class="card-title">Canli Baglanti</div>
-          <div class="row">
-            <div class="label">Servis</div>
-            <div class="value" id="serviceLabel">Tek Servis (otomatik)</div>
+      <section class="driver-view" id="indexSettingsView">
+        <aside class="panel driver-settings-panel">
+          <div class="panel-card">
+            <div class="card-title">Bildirim Ayari</div>
+            <div class="row">
+              <div class="label">Yari Cap (metre)</div>
+              <input class="range" id="radiusInput" type="range" min="10" max="1500" step="10" />
+            </div>
+            <div class="row">
+              <div class="label">Secili Yari Cap</div>
+              <div class="value" id="radiusText">--</div>
+            </div>
+            <div class="row split">
+              <label class="toggle">
+                <input type="checkbox" id="voiceToggle" checked />
+                <span>Sesli Bildirim</span>
+              </label>
+              <button class="btn ghost" id="testVoice">Test Et</button>
+            </div>
           </div>
-          <div class="row">
-            <div class="label">Mod</div>
-            <div class="pill" id="modeLabel">Beklemede</div>
-          </div>
-          <div class="row">
-            <div class="label">Son Guncelleme</div>
-            <div class="value" id="lastUpdate">--</div>
-          </div>
-          <div class="row">
-            <div class="label">Servis Hiz</div>
-            <div class="value" id="speedValue">--</div>
-          </div>
-          <div class="system-note" id="systemNote">Sistem tek servise otomatik baglanir.</div>
-        </div>
-
-        <div class="panel-card">
-          <div class="card-title">Eleman Bilgisi</div>
-          <div class="row">
-            <div class="label">Eleman Sec</div>
-            <select class="input" id="employeeSelect"></select>
-          </div>
-          <div class="row">
-            <div class="label">Kendi Duragim</div>
-            <div class="value" id="employeeStopValue">--</div>
-          </div>
-          <div class="row">
-            <div class="label">Toplam Eleman</div>
-            <div class="value" id="employeeCount">0</div>
-          </div>
-          <div class="hint">Duraklar sofor sayfasindan yonetilir.</div>
-        </div>
-
-        <div class="panel-card">
-          <div class="card-title">Bugun Durumum</div>
-          <div class="row">
-            <div class="label">Yonetim</div>
-            <div class="value">Sofor belirler</div>
-          </div>
-          <div class="hint">Gelecek/gelmeyecek durumu yalnizca sofor ekranindan ayarlanir.</div>
-        </div>
-
-        <div class="panel-card">
-          <div class="card-title">Bildirim Ayari</div>
-          <div class="row">
-            <div class="label">Yari Cap (metre)</div>
-            <input class="range" id="radiusInput" type="range" min="150" max="1500" step="50" />
-          </div>
-          <div class="row split">
-            <label class="toggle">
-              <input type="checkbox" id="voiceToggle" checked />
-              <span>Sesli Bildirim</span>
-            </label>
-            <button class="btn ghost" id="testVoice">Test Et</button>
-          </div>
-        </div>
-
-        <div class="panel-card">
-          <div class="card-title">Sofor Modu</div>
-          <div class="row">
-            <div class="label">Yonetim Ekrani</div>
-            <div class="value"><a class="link" href="driver.html">driver.html</a></div>
-          </div>
-          <div class="hint">Durak ekleme, eleman ekleme ve gunluk listeleme sofor ekraninda.</div>
-        </div>
-      </aside>
+        </aside>
+      </section>
     </main>
 
     <footer class="foot">
