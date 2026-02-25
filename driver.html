@@ -1,0 +1,112 @@
+﻿<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Alpozler Servis - Sofor Yonetimi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="driver">
+  <div class="app">
+    <header class="hero">
+      <div class="brand">
+        <div class="logo">AK</div>
+        <div>
+          <div class="title">Sofor Yonetim Ekrani</div>
+          <div class="subtitle">Canli konum, eleman ve durak yonetimi</div>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <div class="status-pill" id="driverStatus">BOS</div>
+        <button class="btn ghost" id="driverCenterBtn">Haritayi Ortala</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="map-card">
+        <div id="driverMap"></div>
+        <div class="map-overlay">
+          <div class="mini-card">
+            <div class="mini-label">Secili Durak Noktasi</div>
+            <div class="mini-value" id="selectedPointText">--</div>
+            <div class="mini-sub" id="listSummary">Toplam: 0 eleman</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">Canli Konum</div>
+            <div class="mini-value" id="driverCoords">--</div>
+            <div class="mini-sub" id="driverLast">Son gonderim: --</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-card">
+          <div class="card-title">Baglanti ve Konum</div>
+          <div class="row">
+            <div class="label">Servis</div>
+            <div class="value" id="driverServiceLabel">Tek Servis (otomatik)</div>
+          </div>
+          <div class="row split">
+            <button class="btn primary" id="startShare">Canli Konum Baslat</button>
+            <button class="btn ghost" id="stopShare">Duraklat</button>
+          </div>
+          <div class="system-note" id="driverNote">Sistem tek servise otomatik baglidir.</div>
+        </div>
+
+        <div class="panel-card">
+          <div class="card-title">Eleman ve Durak Kaydi</div>
+          <div class="row">
+            <div class="label">Eleman Adi</div>
+            <input class="input" id="employeeNameInput" placeholder="ornek: Ahmet Yilmaz" />
+          </div>
+          <div class="row">
+            <div class="label">Telefon (opsiyonel)</div>
+            <input class="input" id="employeePhoneInput" placeholder="ornek: 05xx" />
+          </div>
+          <div class="row">
+            <div class="label">Not (opsiyonel)</div>
+            <textarea class="input textarea" id="employeeNoteInput" placeholder="ornek: Kapi onunden al"></textarea>
+          </div>
+          <div class="row split">
+            <button class="btn ghost" id="useMyLocationAsStop">Konumumu Durak Yap</button>
+            <button class="btn primary" id="saveEmployeeStop">Secili Noktayi Kaydet</button>
+            <button class="btn ghost" id="clearFormBtn">Formu Temizle</button>
+          </div>
+          <div class="hint">Haritaya tiklayarak durak noktasi sec. Kayit, elemanin evi/duragi olarak tutulur.</div>
+        </div>
+
+        <div class="panel-card">
+          <div class="card-title">Gunluk Durum (Bugun)</div>
+          <div class="row">
+            <div class="label">Durum Notu</div>
+            <input class="input" id="dailyNoteInput" placeholder="ornek: Yillik izin" />
+          </div>
+          <div class="employee-list" id="employeeList">Eleman kaydi yok.</div>
+          <div class="hint">Her satirda Yukari/Asagi ile rota sirasi, Gelecek/Gelmeyecek ve Sil islemleri var.</div>
+        </div>
+
+        <div class="panel-card">
+          <div class="card-title">Eleman Ekrani</div>
+          <div class="row">
+            <div class="label">Takip Sayfasi</div>
+            <div class="value"><a class="link" href="index.html">index.html</a></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="foot">
+      <div>Sofor bu sayfadan duraklari, elemanlari ve gunluk katilimi yonetir.</div>
+      <div class="foot-right">Harita: OpenStreetMap</div>
+    </footer>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="driver.js"></script>
+</body>
+</html>

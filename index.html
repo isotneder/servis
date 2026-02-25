@@ -1,190 +1,133 @@
-<!DOCTYPE html>
-<html>
+﻿<!doctype html>
+<html lang="tr">
 <head>
-<meta charset="UTF-8">
-<title>Servis Canlı Takip</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body { font-family: Arial; background:#111; color:white; text-align:center; margin:0; }
-h2 { margin-top:15px; }
-button {
-  padding:12px 20px;
-  margin:8px;
-  border:none;
-  border-radius:8px;
-  font-size:15px;
-  cursor:pointer;
-}
-.bus { background:#e74c3c; color:white; }
-.passenger { background:#3498db; color:white; }
-.board { background:#2ecc71; color:white; }
-#map { height:400px; width:100%; margin-top:10px; }
-#status { margin-top:10px; font-size:18px; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Alpozler Kahramankazan - Eleman Takip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div class="app">
+    <header class="hero">
+      <div class="brand">
+        <div class="logo">AK</div>
+        <div>
+          <div class="title">Alpozler Kahramankazan</div>
+          <div class="subtitle">Eleman Servis Takip Ekrani</div>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <div class="status-pill" id="statusPill">BOS</div>
+        <button class="btn ghost" id="centerBtn">Haritayi Ortala</button>
+        <button class="btn primary" id="locateBtn">Konumumu Kullan</button>
+      </div>
+    </header>
 
-<h2>🚐 Servis Canlı Takip</h2>
+    <main class="grid">
+      <section class="map-card">
+        <div id="map"></div>
+        <div class="map-overlay">
+          <div class="mini-card">
+            <div class="mini-label">Servise Uzaklik</div>
+            <div class="mini-value" id="distanceValue">--</div>
+            <div class="mini-sub" id="etaValue">ETA: --</div>
+            <div class="mini-sub" id="targetStopText">Hedef durak: --</div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">Durum</div>
+            <div class="mini-value" id="alertStatus">Beklemede</div>
+            <div class="mini-sub">Yari cap: <span id="radiusText">--</span></div>
+            <div class="mini-sub" id="todayStatus">Bugun: --</div>
+          </div>
+        </div>
+      </section>
 
-<button class="bus" onclick="startBus()">Servis Yayını Başlat</button>
-<button class="passenger" onclick="startPassenger()">Yolcu Takibi Başlat</button>
-<button class="board" onclick="boardBus()">Bindim</button>
+      <aside class="panel">
+        <div class="panel-card">
+          <div class="card-title">Canli Baglanti</div>
+          <div class="row">
+            <div class="label">Servis</div>
+            <div class="value" id="serviceLabel">Tek Servis (otomatik)</div>
+          </div>
+          <div class="row">
+            <div class="label">Mod</div>
+            <div class="pill" id="modeLabel">Beklemede</div>
+          </div>
+          <div class="row">
+            <div class="label">Son Guncelleme</div>
+            <div class="value" id="lastUpdate">--</div>
+          </div>
+          <div class="row">
+            <div class="label">Servis Hiz</div>
+            <div class="value" id="speedValue">--</div>
+          </div>
+          <div class="system-note" id="systemNote">Sistem tek servise otomatik baglanir.</div>
+        </div>
 
-<div id="status">Durum: Bekleniyor</div>
-<div id="map"></div>
+        <div class="panel-card">
+          <div class="card-title">Eleman Bilgisi</div>
+          <div class="row">
+            <div class="label">Eleman Sec</div>
+            <select class="input" id="employeeSelect"></select>
+          </div>
+          <div class="row">
+            <div class="label">Kendi Duragim</div>
+            <div class="value" id="employeeStopValue">--</div>
+          </div>
+          <div class="row">
+            <div class="label">Toplam Eleman</div>
+            <div class="value" id="employeeCount">0</div>
+          </div>
+          <div class="hint">Duraklar sofor sayfasindan yonetilir.</div>
+        </div>
 
-<audio id="alarmSound">
-<source src="https://www.soundjay.com/buttons/sounds/beep-07.mp3">
-</audio>
+        <div class="panel-card">
+          <div class="card-title">Bugun Durumum</div>
+          <div class="row">
+            <div class="label">Yonetim</div>
+            <div class="value">Sofor belirler</div>
+          </div>
+          <div class="hint">Gelecek/gelmeyecek durumu yalnizca sofor ekranindan ayarlanir.</div>
+        </div>
 
-<!-- Google Maps -->
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDyXW06DUAGDVhpTmUIoLH5ZY5pxaklOP4"></script>
+        <div class="panel-card">
+          <div class="card-title">Bildirim Ayari</div>
+          <div class="row">
+            <div class="label">Yari Cap (metre)</div>
+            <input class="range" id="radiusInput" type="range" min="150" max="1500" step="50" />
+          </div>
+          <div class="row split">
+            <label class="toggle">
+              <input type="checkbox" id="voiceToggle" checked />
+              <span>Sesli Bildirim</span>
+            </label>
+            <button class="btn ghost" id="testVoice">Test Et</button>
+          </div>
+        </div>
 
-<script type="module">
+        <div class="panel-card">
+          <div class="card-title">Sofor Modu</div>
+          <div class="row">
+            <div class="label">Yonetim Ekrani</div>
+            <div class="value"><a class="link" href="driver.html">driver.html</a></div>
+          </div>
+          <div class="hint">Durak ekleme, eleman ekleme ve gunluk listeleme sofor ekraninda.</div>
+        </div>
+      </aside>
+    </main>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+    <footer class="foot">
+      <div>Alpozler Kahramankazan Servis Takip Programi - Netlify/GitHub Pages uyumlu</div>
+      <div class="foot-right">Harita: OpenStreetMap</div>
+    </footer>
+  </div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD_dJZyISsd1DtR2cWw8VjSSBNTbdeS0xw",
-  authDomain: "servistakip-e5926.firebaseapp.com",
-  databaseURL: "https://servistakip-e5926-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "servistakip-e5926",
-  storageBucket: "servistakip-e5926.firebasestorage.app",
-  messagingSenderId: "278744315160",
-  appId: "1:278744315160:web:21826565505ee6d2b51a6d"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-let map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 15,
-    center: { lat: 39.9208, lng: 32.8541 }
-});
-
-let busMarker = null;
-let passengerMarker = null;
-let passengerLocation = null;
-let alarmPlayed = false;
-
-function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3;
-    const φ1 = lat1 * Math.PI/180;
-    const φ2 = lat2 * Math.PI/180;
-    const Δφ = (lat2-lat1) * Math.PI/180;
-    const Δλ = (lon2-lon1) * Math.PI/180;
-
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-    return R * c;
-}
-
-// 🚐 SERVİS KONUM YAYINI
-window.startBus = function() {
-
-    navigator.geolocation.watchPosition((pos) => {
-
-        const location = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-        };
-
-        set(ref(db, 'bus/location'), location);
-
-        if (!busMarker) {
-            busMarker = new google.maps.Marker({
-                position: location,
-                map: map,
-                label: "🚐"
-            });
-        } else {
-            busMarker.setPosition(location);
-        }
-
-        map.setCenter(location);
-
-        document.getElementById("status").innerText =
-            "Servis yayın yapıyor...";
-
-    }, (err)=> {
-        alert("Konum izni ver!");
-    }, { enableHighAccuracy: true });
-
-}
-
-
-// 👤 YOLCU TAKİBİ
-window.startPassenger = function() {
-
-    navigator.geolocation.getCurrentPosition((pos) => {
-
-        passengerLocation = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-        };
-
-        passengerMarker = new google.maps.Marker({
-            position: passengerLocation,
-            map: map,
-            label: "🏠"
-        });
-
-        map.setCenter(passengerLocation);
-
-        onValue(ref(db, 'bus/location'), (snapshot) => {
-
-            const bus = snapshot.val();
-            if (!bus) return;
-
-            if (!busMarker) {
-                busMarker = new google.maps.Marker({
-                    position: bus,
-                    map: map,
-                    label: "🚐"
-                });
-            } else {
-                busMarker.setPosition(bus);
-            }
-
-            let distance = getDistance(
-                passengerLocation.lat,
-                passengerLocation.lng,
-                bus.lat,
-                bus.lng
-            );
-
-            document.getElementById("status").innerText =
-                "Servis mesafesi: " + Math.round(distance) + " metre";
-
-            if (distance <= 200 && !alarmPlayed) {
-                document.getElementById("alarmSound").play();
-                alert("🚐 Servis yaklaştı!");
-                alarmPlayed = true;
-            }
-
-        });
-
-    }, ()=> {
-        alert("Konum izni ver!");
-    });
-
-}
-
-
-// 🔘 BİNDİM BUTONU
-window.boardBus = function() {
-    alarmPlayed = true;
-    document.getElementById("status").innerText =
-        "Servise bindildi. Alarm kapandı.";
-}
-
-</script>
-
+  <script src="config.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
-
