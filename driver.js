@@ -1,4 +1,4 @@
-const config = window.__APP_CONFIG || {};
+﻿const config = window.__APP_CONFIG || {};
 
 const els = {
   status: document.getElementById("driverStatus"),
@@ -19,6 +19,7 @@ const els = {
   clearFormBtn: document.getElementById("clearFormBtn"),
   dailyNoteInput: document.getElementById("dailyNoteInput"),
   employeeList: document.getElementById("employeeList"),
+  logoSwitch: document.getElementById("driverLogoSwitch"),
   tabMap: document.getElementById("driverTabMap"),
   tabSettings: document.getElementById("driverTabSettings"),
   mapView: document.getElementById("driverMapView"),
@@ -30,6 +31,8 @@ const els = {
 const defaultCenter = config.defaultCenter || { lat: 39.93, lng: 32.85 };
 const defaultZoom = config.defaultZoom || 12;
 const serviceId = String(config.singleServiceId || "ana-servis").trim() || "ana-servis";
+const gpsAccuracyMaxMeters = Math.max(10, Number(config.gpsAccuracyMaxMeters) || 50);
+const gpsJitterIgnoreMeters = Math.max(0, Number(config.gpsJitterIgnoreMeters) || 4);
 
 const state = {
   watchId: null,
@@ -46,7 +49,8 @@ const state = {
   attendanceUnsub: null,
   activeView: "map",
   mapType: "street",
-  followMode: false
+  followMode: false,
+  lastSentPosition: null
 };
 
 if (els.serviceLabel) {
@@ -94,6 +98,7 @@ if (els.tabMap && els.tabSettings) {
   els.tabMap.addEventListener("click", () => setDriverView("map"));
   els.tabSettings.addEventListener("click", () => setDriverView("settings"));
 }
+setupLogoSwitch("index.html");
 
 map.on("click", (event) => {
   setSelectedPoint(event.latlng);
@@ -139,6 +144,29 @@ function setNote(text) {
   }
 }
 
+function setupLogoSwitch(targetUrl) {
+  if (!els.logoSwitch) {
+    return;
+  }
+  let tapCount = 0;
+  let tapTimer = null;
+  els.logoSwitch.addEventListener("click", () => {
+    tapCount += 1;
+    if (tapTimer) {
+      clearTimeout(tapTimer);
+      tapTimer = null;
+    }
+    if (tapCount >= 3) {
+      window.location.href = targetUrl;
+      return;
+    }
+    tapTimer = setTimeout(() => {
+      tapCount = 0;
+      tapTimer = null;
+    }, 900);
+  });
+}
+
 function loadFollowModePreference() {
   try {
     return String(localStorage.getItem("ak.driverFollowMode") || "").trim() === "1";
@@ -155,7 +183,7 @@ function setFollowMode(enabled) {
     // ignore storage errors in strict browser modes
   }
   if (els.followBtn) {
-    els.followBtn.textContent = state.followMode ? "Navigasyon Kapat" : "Navigasyon Aç";
+    els.followBtn.textContent = state.followMode ? "Navigasyon Kapat" : "Navigasyon Ac";
     els.followBtn.classList.toggle("primary", state.followMode);
     els.followBtn.classList.toggle("ghost", !state.followMode);
   }
@@ -209,7 +237,7 @@ function setMapType(nextType) {
     // ignore storage errors in strict browser modes
   }
   if (els.mapTypeBtn) {
-    els.mapTypeBtn.textContent = mapType === "satellite" ? "Normal Harita" : "Uydu Aç";
+    els.mapTypeBtn.textContent = mapType === "satellite" ? "Normal Harita" : "Uydu Ac";
   }
 }
 
@@ -274,6 +302,18 @@ function formatTime(ts) {
 
 function formatCoord(lat, lng) {
   return `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
+}
+
+function distanceMeters(a, b) {
+  const R = 6371000;
+  const lat1 = (Number(a.lat) * Math.PI) / 180;
+  const lat2 = (Number(b.lat) * Math.PI) / 180;
+  const dLat = lat2 - lat1;
+  const dLng = ((Number(b.lng) - Number(a.lng)) * Math.PI) / 180;
+  const sinDLat = Math.sin(dLat / 2);
+  const sinDLng = Math.sin(dLng / 2);
+  const h = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLng * sinDLng;
+  return 2 * R * Math.asin(Math.sqrt(h));
 }
 
 function normalizeEmployees(raw) {
@@ -380,12 +420,15 @@ function setSelectedPoint(latlng) {
 
 function fillLiveInfo(payload) {
   els.coords.textContent = formatCoord(payload.lat, payload.lng);
-  els.last.textContent = `Son gönderim: ${formatTime(payload.ts)}`;
+  const accText = Number.isFinite(Number(payload.accuracy))
+    ? ` | ±${Math.round(Number(payload.accuracy))} m`
+    : "";
+  els.last.textContent = `Son gonderim: ${formatTime(payload.ts)}${accText}`;
 }
 
 function clearLiveInfo() {
   els.coords.textContent = "--";
-  els.last.textContent = "Son gönderim: --";
+  els.last.textContent = "Son gonderim: --";
   if (map.hasLayer(liveMarker)) {
     map.removeLayer(liveMarker);
   }
@@ -412,7 +455,7 @@ function renderEmployeeList() {
   els.employeeList.innerHTML = "";
 
   if (!employees.length) {
-    els.employeeList.textContent = "Eleman kaydı yok.";
+    els.employeeList.textContent = "Eleman kaydÄ± yok.";
     updateSummary();
     renderEmployeeMarkers();
     return;
@@ -450,11 +493,11 @@ function renderEmployeeList() {
     const actions = document.createElement("div");
     actions.className = "employee-actions";
 
-    const upButton = buildActionButton("Yukarı", "ghost", "route-up", employee.id);
+    const upButton = buildActionButton("YukarÄ±", "ghost", "route-up", employee.id);
     upButton.disabled = index === 0;
     actions.appendChild(upButton);
 
-    const downButton = buildActionButton("Aşağı", "ghost", "route-down", employee.id);
+    const downButton = buildActionButton("AÅŸaÄŸÄ±", "ghost", "route-down", employee.id);
     downButton.disabled = index === employees.length - 1;
     actions.appendChild(downButton);
 
@@ -654,7 +697,8 @@ async function connectBusDataAuto() {
           const payload = {
             lat: Number(data.lat),
             lng: Number(data.lng),
-            ts: Number(data.ts || Date.now())
+            ts: Number(data.ts || Date.now()),
+            accuracy: Number(data.accuracy || 0)
           };
           state.livePosition = payload;
           liveMarker.setLatLng([payload.lat, payload.lng]).addTo(map);
@@ -725,20 +769,36 @@ async function startSharing() {
   const livePath = `${basePath()}/live`;
   state.watchId = navigator.geolocation.watchPosition(
     async (position) => {
+      const accuracy = Number(position.coords.accuracy || 0);
+      if (Number.isFinite(accuracy) && accuracy > gpsAccuracyMaxMeters) {
+        setNote(`GPS zayif (${Math.round(accuracy)} m). Acik alana gecip tekrar dene.`);
+        return;
+      }
+
       const payload = {
         isSharing: true,
         lat: position.coords.latitude,
         lng: position.coords.longitude,
+        accuracy: Number.isFinite(accuracy) ? accuracy : null,
         speedKmh: position.coords.speed ? position.coords.speed * 3.6 : null,
         heading: position.coords.heading ?? null,
         ts: Date.now()
       };
+
+      if (state.lastSentPosition) {
+        const moved = distanceMeters(state.lastSentPosition, payload);
+        if (moved < gpsJitterIgnoreMeters) {
+          return;
+        }
+      }
+
       state.livePosition = { lat: payload.lat, lng: payload.lng, ts: payload.ts };
       liveMarker.setLatLng([payload.lat, payload.lng]).addTo(map);
       fillLiveInfo(payload);
       followLivePosition();
       try {
         await firebase.set(firebase.ref(state.firebaseDb, livePath), payload);
+        state.lastSentPosition = { lat: payload.lat, lng: payload.lng };
         setStatus("LIVE");
         setNote("Canli konum gonderiliyor.");
       } catch (error) {
@@ -749,7 +809,7 @@ async function startSharing() {
       setNote(`Konum hatasi: ${error.message}`);
       setStatus("BAGLI");
     },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 2000 }
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
   );
 }
 
@@ -758,6 +818,7 @@ async function stopSharing() {
     navigator.geolocation.clearWatch(state.watchId);
     state.watchId = null;
   }
+  state.lastSentPosition = null;
 
   if (config.firebase && config.firebase.enabled && state.firebaseFns) {
     try {
@@ -950,3 +1011,4 @@ function onEmployeeListClick(event) {
     removeEmployee(employeeId);
   }
 }
+

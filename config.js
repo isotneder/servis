@@ -5,6 +5,9 @@
   defaultZoom: 12,
   announceRadiusMeters: 600,
   driverOfflineTimeoutMs: 90000,
+  gpsAccuracyMaxMeters: 50,
+  gpsJitterIgnoreMeters: 4,
+  liveAccuracyMaxMeters: 50,
   firebase: {
     enabled: true,
     busPath: "buses",

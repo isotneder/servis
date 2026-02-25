@@ -13,6 +13,7 @@ const els = {
   voiceToggle: document.getElementById("voiceToggle"),
   testVoice: document.getElementById("testVoice"),
   mapTypeBtn: document.getElementById("mapTypeBtn"),
+  logoSwitch: document.getElementById("indexLogoSwitch"),
   tabMap: document.getElementById("indexTabMap"),
   tabSettings: document.getElementById("indexTabSettings"),
   mapView: document.getElementById("indexMapView"),
@@ -44,6 +45,7 @@ const defaultCenter = config.defaultCenter || { lat: 39.93, lng: 32.85 };
 const defaultZoom = config.defaultZoom || 12;
 const announceRadius = config.announceRadiusMeters || 600;
 const driverOfflineTimeoutMs = Math.max(15000, Number(config.driverOfflineTimeoutMs) || 90000);
+const liveAccuracyMaxMeters = Math.max(10, Number(config.liveAccuracyMaxMeters) || 50);
 
 const state = {
   mode: "idle",
@@ -123,6 +125,7 @@ if (els.tabMap && els.tabSettings) {
   els.tabMap.addEventListener("click", () => setHomeView("map"));
   els.tabSettings.addEventListener("click", () => setHomeView("settings"));
 }
+setupLogoSwitch("driver.html");
 setMapType(loadMapTypePreference());
 setHomeView(loadHomeViewPreference());
 
@@ -147,6 +150,29 @@ function setSystemNote(message) {
   if (els.systemNote) {
     els.systemNote.textContent = message;
   }
+}
+
+function setupLogoSwitch(targetUrl) {
+  if (!els.logoSwitch) {
+    return;
+  }
+  let tapCount = 0;
+  let tapTimer = null;
+  els.logoSwitch.addEventListener("click", () => {
+    tapCount += 1;
+    if (tapTimer) {
+      clearTimeout(tapTimer);
+      tapTimer = null;
+    }
+    if (tapCount >= 3) {
+      window.location.href = targetUrl;
+      return;
+    }
+    tapTimer = setTimeout(() => {
+      tapCount = 0;
+      tapTimer = null;
+    }, 900);
+  });
 }
 
 function loadHomeViewPreference() {
@@ -328,15 +354,19 @@ function startUserTracking() {
     (position) => {
       state.user = {
         lat: position.coords.latitude,
-        lng: position.coords.longitude
+        lng: position.coords.longitude,
+        accuracy: Number(position.coords.accuracy || 0)
       };
       userMarker.addTo(map).setLatLng([state.user.lat, state.user.lng]);
+      if (Number.isFinite(state.user.accuracy) && state.user.accuracy > 80) {
+        setSystemNote(`Konum dogrulugu dusuk (±${Math.round(state.user.accuracy)} m).`);
+      }
       updateMetrics();
     },
     (error) => {
       setSystemNote(`Konum alinamadi: ${error.message}`);
     },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
   );
   setSystemNote("Konum takibi acildi.");
 }
@@ -523,7 +553,7 @@ function maybeAnnounceStop(targetKey, targetName) {
   const now = Date.now();
   const isNewTarget = targetKey && targetKey !== state.lastAnnouncedTargetKey;
   if (!state.announced || isNewTarget || now - state.announceAt > 120000) {
-    speak(`${targetName} duragina yaklasiliyor.`);
+    speak(`${targetName} durağına yaklaşılıyor.`);
     state.announced = true;
     state.announceAt = now;
     state.lastAnnouncedTargetKey = targetKey;
@@ -719,6 +749,11 @@ async function connectFirebaseAuto() {
         }
 
         if (Number.isFinite(Number(data.lat)) && Number.isFinite(Number(data.lng))) {
+          const accuracy = Number(data.accuracy || 0);
+          if (Number.isFinite(accuracy) && accuracy > liveAccuracyMaxMeters) {
+            setSystemNote(`Sofor GPS dogrulugu dusuk (±${Math.round(accuracy)} m), daha iyi konum bekleniyor.`);
+            return;
+          }
           state.driverSharingActive = true;
           state.lastLiveTs = Number(data.ts || Date.now());
           if (Number.isFinite(Number(data.speedKmh))) {
