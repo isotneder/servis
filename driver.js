@@ -18,7 +18,11 @@ const els = {
   saveEmployeeStop: document.getElementById("saveEmployeeStop"),
   clearFormBtn: document.getElementById("clearFormBtn"),
   dailyNoteInput: document.getElementById("dailyNoteInput"),
-  employeeList: document.getElementById("employeeList")
+  employeeList: document.getElementById("employeeList"),
+  tabMap: document.getElementById("driverTabMap"),
+  tabSettings: document.getElementById("driverTabSettings"),
+  mapView: document.getElementById("driverMapView"),
+  settingsView: document.getElementById("driverSettingsView")
 };
 
 const defaultCenter = config.defaultCenter || { lat: 39.93, lng: 32.85 };
@@ -37,7 +41,8 @@ const state = {
   firebaseFns: null,
   liveUnsub: null,
   employeesUnsub: null,
-  attendanceUnsub: null
+  attendanceUnsub: null,
+  activeView: "map"
 };
 
 if (els.serviceLabel) {
@@ -63,13 +68,20 @@ const routeLine = L.polyline([], {
   interactive: false
 }).addTo(map);
 
-els.centerBtn.addEventListener("click", centerMap);
+els.centerBtn.addEventListener("click", () => {
+  setDriverView("map");
+  centerMap();
+});
 els.startShare.addEventListener("click", startSharing);
 els.stopShare.addEventListener("click", stopSharing);
 els.useMyLocationAsStop.addEventListener("click", useLiveLocationAsStop);
 els.saveEmployeeStop.addEventListener("click", saveEmployeeStop);
 els.clearFormBtn.addEventListener("click", clearEmployeeForm);
 els.employeeList.addEventListener("click", onEmployeeListClick);
+if (els.tabMap && els.tabSettings) {
+  els.tabMap.addEventListener("click", () => setDriverView("map"));
+  els.tabSettings.addEventListener("click", () => setDriverView("settings"));
+}
 
 map.on("click", (event) => {
   setSelectedPoint(event.latlng);
@@ -78,6 +90,7 @@ map.on("click", (event) => {
 setStatus("BOS");
 updateSummary();
 renderEmployeeList();
+setDriverView(loadPreferredView());
 
 if (config.firebase && config.firebase.enabled) {
   connectBusDataAuto();
@@ -109,6 +122,48 @@ function setStatus(text) {
 function setNote(text) {
   if (els.note) {
     els.note.textContent = text;
+  }
+}
+
+function loadPreferredView() {
+  try {
+    const value = String(localStorage.getItem("ak.driverView") || "").trim();
+    return value === "settings" ? "settings" : "map";
+  } catch {
+    return "map";
+  }
+}
+
+function setDriverView(view) {
+  const nextView = view === "settings" ? "settings" : "map";
+  state.activeView = nextView;
+  try {
+    localStorage.setItem("ak.driverView", nextView);
+  } catch {
+    // ignore storage errors in strict browser modes
+  }
+
+  const isMap = nextView === "map";
+  if (els.mapView) {
+    els.mapView.classList.toggle("active", isMap);
+  }
+  if (els.settingsView) {
+    els.settingsView.classList.toggle("active", !isMap);
+  }
+  if (els.tabMap) {
+    els.tabMap.classList.toggle("active", isMap);
+    els.tabMap.setAttribute("aria-selected", isMap ? "true" : "false");
+  }
+  if (els.tabSettings) {
+    els.tabSettings.classList.toggle("active", !isMap);
+    els.tabSettings.setAttribute("aria-selected", !isMap ? "true" : "false");
+  }
+
+  if (isMap) {
+    window.setTimeout(() => {
+      map.invalidateSize();
+      centerMap();
+    }, 60);
   }
 }
 
