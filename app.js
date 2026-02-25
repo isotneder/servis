@@ -20,7 +20,8 @@ const els = {
   radiusInput: document.getElementById("radiusInput"),
   radiusText: document.getElementById("radiusText"),
   voiceToggle: document.getElementById("voiceToggle"),
-  testVoice: document.getElementById("testVoice")
+  testVoice: document.getElementById("testVoice"),
+  mapTypeBtn: document.getElementById("mapTypeBtn")
 };
 
 const storage = {
@@ -72,7 +73,8 @@ const state = {
   attendanceUnsub: null,
   shareMonitorTimer: null,
   lastBusPoint: null,
-  lastLiveTs: 0
+  lastLiveTs: 0,
+  mapType: "street"
 };
 
 if (els.serviceLabel) {
@@ -81,10 +83,14 @@ if (els.serviceLabel) {
 
 const map = L.map("map", { zoomControl: false }).setView([defaultCenter.lat, defaultCenter.lng], defaultZoom);
 L.control.zoom({ position: "bottomright" }).addTo(map);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+const streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "&copy; OpenStreetMap"
-}).addTo(map);
+});
+const satelliteLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+  maxZoom: 19,
+  attribution: "Tiles &copy; Esri"
+});
 
 const busIcon = L.divIcon({ className: "marker bus" });
 const userIcon = L.divIcon({ className: "marker user" });
@@ -104,6 +110,9 @@ els.radiusText.textContent = `${initialRadius} m`;
 
 els.centerBtn.addEventListener("click", centerMap);
 els.locateBtn.addEventListener("click", startUserTracking);
+if (els.mapTypeBtn) {
+  els.mapTypeBtn.addEventListener("click", toggleMapType);
+}
 els.employeeSelect.addEventListener("change", onEmployeeSelect);
 els.radiusInput.addEventListener("input", () => {
   const radius = Number(els.radiusInput.value);
@@ -111,7 +120,8 @@ els.radiusInput.addEventListener("input", () => {
   els.radiusText.textContent = `${radius} m`;
   updateMetrics();
 });
-els.testVoice.addEventListener("click", () => speak("Servis yaklaştı. Hazır ol."));
+els.testVoice.addEventListener("click", () => speak("Servis yaklasti. Hazir ol."));
+setMapType(loadMapTypePreference());
 
 renderEmployeeOptions();
 renderStops();
@@ -136,6 +146,43 @@ function setSystemNote(message) {
   if (els.systemNote) {
     els.systemNote.textContent = message;
   }
+}
+
+function loadMapTypePreference() {
+  try {
+    const value = String(localStorage.getItem("ak.mapType") || "").trim();
+    return value === "satellite" ? "satellite" : "street";
+  } catch {
+    return "street";
+  }
+}
+
+function setMapType(nextType) {
+  const mapType = nextType === "satellite" ? "satellite" : "street";
+  if (map.hasLayer(streetLayer)) {
+    map.removeLayer(streetLayer);
+  }
+  if (map.hasLayer(satelliteLayer)) {
+    map.removeLayer(satelliteLayer);
+  }
+  if (mapType === "satellite") {
+    satelliteLayer.addTo(map);
+  } else {
+    streetLayer.addTo(map);
+  }
+  state.mapType = mapType;
+  try {
+    localStorage.setItem("ak.mapType", mapType);
+  } catch {
+    // ignore storage errors in strict browser modes
+  }
+  if (els.mapTypeBtn) {
+    els.mapTypeBtn.textContent = mapType === "satellite" ? "Normal Harita" : "Uydu Ac";
+  }
+}
+
+function toggleMapType() {
+  setMapType(state.mapType === "satellite" ? "street" : "satellite");
 }
 
 function setMode(mode) {

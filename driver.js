@@ -22,7 +22,9 @@ const els = {
   tabMap: document.getElementById("driverTabMap"),
   tabSettings: document.getElementById("driverTabSettings"),
   mapView: document.getElementById("driverMapView"),
-  settingsView: document.getElementById("driverSettingsView")
+  settingsView: document.getElementById("driverSettingsView"),
+  mapTypeBtn: document.getElementById("driverMapTypeBtn"),
+  followBtn: document.getElementById("driverFollowBtn")
 };
 
 const defaultCenter = config.defaultCenter || { lat: 39.93, lng: 32.85 };
@@ -42,7 +44,9 @@ const state = {
   liveUnsub: null,
   employeesUnsub: null,
   attendanceUnsub: null,
-  activeView: "map"
+  activeView: "map",
+  mapType: "street",
+  followMode: false
 };
 
 if (els.serviceLabel) {
@@ -51,10 +55,14 @@ if (els.serviceLabel) {
 
 const map = L.map("driverMap", { zoomControl: false }).setView([defaultCenter.lat, defaultCenter.lng], defaultZoom);
 L.control.zoom({ position: "bottomright" }).addTo(map);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+const streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "&copy; OpenStreetMap"
-}).addTo(map);
+});
+const satelliteLayer = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+  maxZoom: 19,
+  attribution: "Tiles &copy; Esri"
+});
 
 const liveIcon = L.divIcon({ className: "marker bus" });
 const selectedIcon = L.divIcon({ className: "marker stop own" });
@@ -70,7 +78,11 @@ const routeLine = L.polyline([], {
 
 els.centerBtn.addEventListener("click", () => {
   setDriverView("map");
-  centerMap();
+  if (state.followMode && state.livePosition) {
+    followLivePosition(true);
+  } else {
+    centerMap();
+  }
 });
 els.startShare.addEventListener("click", startSharing);
 els.stopShare.addEventListener("click", stopSharing);
@@ -78,6 +90,12 @@ els.useMyLocationAsStop.addEventListener("click", useLiveLocationAsStop);
 els.saveEmployeeStop.addEventListener("click", saveEmployeeStop);
 els.clearFormBtn.addEventListener("click", clearEmployeeForm);
 els.employeeList.addEventListener("click", onEmployeeListClick);
+if (els.mapTypeBtn) {
+  els.mapTypeBtn.addEventListener("click", toggleMapType);
+}
+if (els.followBtn) {
+  els.followBtn.addEventListener("click", toggleFollowMode);
+}
 if (els.tabMap && els.tabSettings) {
   els.tabMap.addEventListener("click", () => setDriverView("map"));
   els.tabSettings.addEventListener("click", () => setDriverView("settings"));
@@ -91,6 +109,8 @@ setStatus("BOS");
 updateSummary();
 renderEmployeeList();
 setDriverView(loadPreferredView());
+setMapType(loadMapTypePreference());
+setFollowMode(loadFollowModePreference());
 
 if (config.firebase && config.firebase.enabled) {
   connectBusDataAuto();
@@ -123,6 +143,84 @@ function setNote(text) {
   if (els.note) {
     els.note.textContent = text;
   }
+}
+
+function loadFollowModePreference() {
+  try {
+    return String(localStorage.getItem("ak.driverFollowMode") || "").trim() === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setFollowMode(enabled) {
+  state.followMode = !!enabled;
+  try {
+    localStorage.setItem("ak.driverFollowMode", state.followMode ? "1" : "0");
+  } catch {
+    // ignore storage errors in strict browser modes
+  }
+  if (els.followBtn) {
+    els.followBtn.textContent = state.followMode ? "Navigasyon Kapat" : "Navigasyon Ac";
+    els.followBtn.classList.toggle("primary", state.followMode);
+    els.followBtn.classList.toggle("ghost", !state.followMode);
+  }
+  if (state.followMode) {
+    followLivePosition(true);
+  }
+}
+
+function toggleFollowMode() {
+  setFollowMode(!state.followMode);
+}
+
+function followLivePosition(force = false) {
+  if (!state.followMode || !state.livePosition || state.activeView !== "map") {
+    return;
+  }
+  const target = [state.livePosition.lat, state.livePosition.lng];
+  if (force) {
+    map.setView(target, Math.max(map.getZoom(), 16), { animate: true });
+    return;
+  }
+  map.panTo(target, { animate: true, duration: 0.5 });
+}
+
+function loadMapTypePreference() {
+  try {
+    const value = String(localStorage.getItem("ak.driverMapType") || "").trim();
+    return value === "satellite" ? "satellite" : "street";
+  } catch {
+    return "street";
+  }
+}
+
+function setMapType(nextType) {
+  const mapType = nextType === "satellite" ? "satellite" : "street";
+  if (map.hasLayer(streetLayer)) {
+    map.removeLayer(streetLayer);
+  }
+  if (map.hasLayer(satelliteLayer)) {
+    map.removeLayer(satelliteLayer);
+  }
+  if (mapType === "satellite") {
+    satelliteLayer.addTo(map);
+  } else {
+    streetLayer.addTo(map);
+  }
+  state.mapType = mapType;
+  try {
+    localStorage.setItem("ak.driverMapType", mapType);
+  } catch {
+    // ignore storage errors in strict browser modes
+  }
+  if (els.mapTypeBtn) {
+    els.mapTypeBtn.textContent = mapType === "satellite" ? "Normal Harita" : "Uydu Ac";
+  }
+}
+
+function toggleMapType() {
+  setMapType(state.mapType === "satellite" ? "street" : "satellite");
 }
 
 function loadPreferredView() {
@@ -162,7 +260,11 @@ function setDriverView(view) {
   if (isMap) {
     window.setTimeout(() => {
       map.invalidateSize();
-      centerMap();
+      if (state.followMode && state.livePosition) {
+        followLivePosition(true);
+      } else {
+        centerMap();
+      }
     }, 60);
   }
 }
@@ -577,6 +679,7 @@ async function connectBusDataAuto() {
           state.livePosition = payload;
           liveMarker.setLatLng([payload.lat, payload.lng]).addTo(map);
           fillLiveInfo(payload);
+          followLivePosition();
         }
       },
       (error) => {
@@ -653,6 +756,7 @@ async function startSharing() {
       state.livePosition = { lat: payload.lat, lng: payload.lng, ts: payload.ts };
       liveMarker.setLatLng([payload.lat, payload.lng]).addTo(map);
       fillLiveInfo(payload);
+      followLivePosition();
       try {
         await firebase.set(firebase.ref(state.firebaseDb, livePath), payload);
         setStatus("LIVE");
