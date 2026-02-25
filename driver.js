@@ -69,12 +69,6 @@ const selectedIcon = L.divIcon({ className: "marker stop own" });
 const liveMarker = L.marker([defaultCenter.lat, defaultCenter.lng], { icon: liveIcon });
 const selectedMarker = L.marker([defaultCenter.lat, defaultCenter.lng], { icon: selectedIcon });
 const employeeLayer = L.layerGroup().addTo(map);
-const routeLine = L.polyline([], {
-  color: "#f4a300",
-  weight: 2,
-  opacity: 0.9,
-  interactive: false
-}).addTo(map);
 
 els.centerBtn.addEventListener("click", () => {
   setDriverView("map");
@@ -411,20 +405,6 @@ function renderEmployeeMarkers() {
       loadEmployeeIntoForm(employee.id);
     });
   }
-  renderRouteLine();
-}
-
-function renderRouteLine() {
-  const points = sortedEmployeesByRoute()
-    .filter((employee) => isEmployeeActiveToday(employee.id))
-    .map((employee) => [employee.lat, employee.lng]);
-
-  if (points.length < 2) {
-    routeLine.setLatLngs([]);
-    return;
-  }
-
-  routeLine.setLatLngs(points);
 }
 
 function renderEmployeeList() {

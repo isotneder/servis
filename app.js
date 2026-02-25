@@ -97,12 +97,6 @@ const userIcon = L.divIcon({ className: "marker user" });
 const busMarker = L.marker([defaultCenter.lat, defaultCenter.lng], { icon: busIcon });
 const userMarker = L.marker([defaultCenter.lat, defaultCenter.lng], { icon: userIcon });
 const stopLayer = L.layerGroup().addTo(map);
-const routeLine = L.polyline([], {
-  color: "#f4a300",
-  weight: 2,
-  opacity: 0.9,
-  interactive: false
-}).addTo(map);
 
 const initialRadius = storage.getNumber("ak.radius", announceRadius);
 els.radiusInput.value = initialRadius;
@@ -254,32 +248,6 @@ function sortedEmployees() {
   return Object.values(state.employees).sort((a, b) => a.name.localeCompare(b.name, "tr"));
 }
 
-function sortedEmployeesByRoute() {
-  return Object.values(state.employees).sort((a, b) => {
-    const aOrder = Number.isFinite(Number(a.routeOrder)) && Number(a.routeOrder) > 0 ? Number(a.routeOrder) : null;
-    const bOrder = Number.isFinite(Number(b.routeOrder)) && Number(b.routeOrder) > 0 ? Number(b.routeOrder) : null;
-
-    if (aOrder !== null && bOrder !== null && aOrder !== bOrder) {
-      return aOrder - bOrder;
-    }
-    if ((aOrder !== null) !== (bOrder !== null)) {
-      return aOrder !== null ? -1 : 1;
-    }
-
-    const aCreatedAt = Number(a.createdAt || 0);
-    const bCreatedAt = Number(b.createdAt || 0);
-    const aHasCreatedAt = aCreatedAt > 0;
-    const bHasCreatedAt = bCreatedAt > 0;
-    if (aHasCreatedAt && bHasCreatedAt && aCreatedAt !== bCreatedAt) {
-      return aCreatedAt - bCreatedAt;
-    }
-    if (aHasCreatedAt !== bHasCreatedAt) {
-      return aHasCreatedAt ? -1 : 1;
-    }
-    return a.name.localeCompare(b.name, "tr");
-  });
-}
-
 function getAttendance(employeeId) {
   return state.attendance[employeeId] || null;
 }
@@ -377,20 +345,6 @@ function renderStops() {
       updateMetrics();
     });
   }
-  renderRouteLine();
-}
-
-function renderRouteLine() {
-  const points = sortedEmployeesByRoute()
-    .filter((employee) => isEmployeeActiveToday(employee.id))
-    .map((employee) => [employee.lat, employee.lng]);
-
-  if (points.length < 2) {
-    routeLine.setLatLngs([]);
-    return;
-  }
-
-  routeLine.setLatLngs(points);
 }
 
 function onEmployeeSelect() {
