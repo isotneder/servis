@@ -635,6 +635,11 @@ body.driver #driverMap {
     border-radius: 16px;
   }
 
+  body:not(.driver) .map-card,
+  body:not(.driver) #map {
+    min-height: 72vh;
+  }
+
   body.driver .driver-tabs {
     position: sticky;
     top: 8px;
@@ -664,21 +669,50 @@ body.driver #driverMap {
     gap: 8px;
   }
 
+  body:not(.driver) .map-overlay {
+    top: 10px;
+    left: 10px;
+    right: auto;
+    bottom: auto;
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
   .mini-card {
     padding: 8px 10px;
     border-radius: 10px;
+  }
+
+  body:not(.driver) .mini-card {
+    padding: 6px 8px;
+    border-radius: 8px;
+    max-width: 150px;
   }
 
   .mini-label {
     font-size: 10px;
   }
 
+  body:not(.driver) .mini-label {
+    font-size: 9px;
+  }
+
   .mini-value {
     font-size: 16px;
   }
 
+  body:not(.driver) .mini-value {
+    font-size: 12px;
+    line-height: 1.1;
+  }
+
   .mini-sub {
     font-size: 11px;
+  }
+
+  body:not(.driver) .mini-sub {
+    font-size: 10px;
+    line-height: 1.2;
   }
 
   .panel {
@@ -756,9 +790,27 @@ body.driver #driverMap {
     min-height: 330px;
   }
 
+  body:not(.driver) .map-card,
+  body:not(.driver) #map {
+    min-height: 68vh;
+  }
+
   body.driver .driver-map-card,
   body.driver #driverMap {
     min-height: 68vh;
+  }
+
+  body:not(.driver) .mini-card {
+    max-width: 136px;
+    padding: 5px 7px;
+  }
+
+  body:not(.driver) .mini-value {
+    font-size: 11px;
+  }
+
+  body:not(.driver) .mini-sub {
+    font-size: 9px;
   }
 }
 
