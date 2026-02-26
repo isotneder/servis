@@ -1,50 +1,50 @@
 ﻿# Alpozler Kahramankazan Servis Takip Programı
 
-Bu proje Netlify/GitHub Pages uzerinde calisan statik bir web uygulamasidir.
-Iki rol vardir:
-- `driver.html`: Sofor yonetim ekrani
-- `index.html`: Eleman takip ekrani
+Bu proje Netlify/GitHub Pages üzerinde çalışan statik bir web uygulamasıdır.
+İki rol vardır:
+- `driver.html`: Şoför yönetim ekranı
+- `index.html`: Eleman takip ekranı
 
-Sistem tek servis mantigi ile calisir. Servis secimi veya baglan butonu yoktur.
+Sistem tek servis mantığı ile çalışır. Servis seçimi veya bağlan butonu yoktur.
 
-## Ozellikler
-- Sofor ekraninda canli harita
-- Sofor ekraninda eleman ekleme + elemanin evi/duragi (haritadan secim)
-- Duraklarin Firebase'e kaydedilmesi
-- Eleman ekraninda kendi duragini secip servisi izleme
-- Bugun `gelecek / gelmeyecek` durumunu yalnizca soforun yonetmesi
-- Sofor konum paylasmiyorsa eleman ekraninda otomatik uyari
-- Servis duraga yaklasinca sesli bildirim
+## Özellikler
+- Şoför ekranında canlı harita
+- Şoför ekranında eleman ekleme + elemanın evi/durağı (haritadan seçim)
+- Durakların Firebase'e kaydedilmesi
+- Eleman ekranında kendi durağını seçip servisi izleme
+- Bugün `gelecek / gelmeyecek` durumunu yalnızca şoförün yönetmesi
+- Şoför konum paylaşmıyorsa eleman ekranında otomatik uyarı
+- Servis durağa yaklaşınca sesli bildirim
 
-## Veri yapisi (Firebase Realtime Database)
-- `buses/{singleServiceId}/live`: Servisin anlik konumu
+## Veri yapısı (Firebase Realtime Database)
+- `buses/{singleServiceId}/live`: Servisin anlık konumu
 - `buses/{singleServiceId}/employees/{employeeId}`: Eleman + durak bilgisi
-- `buses/{singleServiceId}/attendance/{yyyy-mm-dd}/{employeeId}`: Gunluk katilim durumu
+- `buses/{singleServiceId}/attendance/{yyyy-mm-dd}/{employeeId}`: Günlük katılım durumu
 
-## Lokal calistirma
-1. Bu klasorde terminal ac:
+## Yerel çalıştırma
+1. Bu klasörde terminal aç:
    - `python -m http.server 5173`
-2. Tarayici:
+2. Tarayıcı:
    - `http://localhost:5173`
 
-## Deploy
-1. Netlify: klasoru `https://app.netlify.com/drop` alanina surukle-birak
-2. GitHub Pages: repoya yukle, `Settings > Pages` ile yayinla
+## Dağıtım
+1. Netlify: klasörü `https://app.netlify.com/drop` alanına sürükle-bırak
+2. GitHub Pages: repoya yükle, `Settings > Pages` ile yayınla
 
-## Canli kullanim (ucretsiz)
-Canli olarak sofor-eleman senkronu icin Firebase gereklidir.
+## Canlı kullanım (ücretsiz)
+Canlı olarak şoför-eleman senkronu için Firebase gereklidir.
 
-1. Firebase Spark (ucretsiz) proje ac
-2. Realtime Database etkinlestir
-3. `config.js` dosyasinda `firebase.config` alanlarini doldur
-4. `config.js` icinde `firebase.enabled = true` yap
-5. Gerekirse `config.js` icindeki `singleServiceId` degerini degistir
-6. Istersen `driverOfflineTimeoutMs` ile \"sofor paylasmiyor\" uyarisinin gecikmesini ayarla
-7. Sofor `driver.html` sayfasinda canli konum paylasimini baslatsin
-8. Sofor, elemanlar icin bugun durumunu `driver.html` uzerinden ayarlasin
-9. Elemanlar `index.html` acip direkt takip etsin
+1. Firebase Spark (ücretsiz) proje aç
+2. Realtime Database etkinleştir
+3. `config.js` dosyasında `firebase.config` alanlarını doldur
+4. `config.js` içinde `firebase.enabled = true` yap
+5. Gerekirse `config.js` içindeki `singleServiceId` değerini değiştir
+6. İstersen `driverOfflineTimeoutMs` ile "şoför paylaşmıyor" uyarısının gecikmesini ayarla
+7. Şoför `driver.html` sayfasında canlı konum paylaşımını başlatsın
+8. Şoför, elemanlar için bugün durumunu `driver.html` üzerinden ayarlasın
+9. Elemanlar `index.html` açıp direkt takip etsin
 
 ## Notlar
-- HTTPS gerekli (Netlify/GitHub Pages bunu saglar)
-- Konum ve sesli bildirim tarayici izni ister
-- Firebase kapaliyken canli takip calismaz
+- HTTPS gerekli (Netlify/GitHub Pages bunu sağlar)
+- Konum ve sesli bildirim tarayıcı izni ister
+- Firebase kapalıyken canlı takip çalışmaz

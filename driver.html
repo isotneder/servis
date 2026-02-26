@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Alpozler Servis - Şoför Yönetimi</title>
   <link rel="icon" type="image/png" href="logo.png" />
   <link rel="apple-touch-icon" href="logo.png" />
@@ -19,10 +22,7 @@
         <div class="logo logo-switch" id="driverLogoSwitch" title="3 kez dokun: Eleman ekrani">
           <img class="logo-img" src="logo.png" alt="Alpozler Logo" onerror="this.style.display='none'" />
         </div>
-        <div>
-          <div class="title">Şoför Yönetim Ekranı</div>
-          <div class="subtitle">Canlı konum, eleman ve durak yönetimi.</div>
-        </div>
+        <div class="subtitle">Canlı konum, eleman ve durak yönetimi.</div>
       </div>
       <div class="hero-actions">
         <div class="status-pill" id="driverStatus">BOŞ</div>
@@ -77,14 +77,7 @@
               <div class="label">Eleman Adı</div>
               <input class="input" id="employeeNameInput" placeholder="örnek: Ahmet Yılmaz" />
             </div>
-            <div class="row">
-              <div class="label">Telefon (isteğe bağlı)</div>
-              <input class="input" id="employeePhoneInput" placeholder="örnek: 05xx" />
-            </div>
-            <div class="row">
-              <div class="label">Not (isteğe bağlı)</div>
-              <textarea class="input textarea" id="employeeNoteInput" placeholder="örnek: Kapı önünde al"></textarea>
-            </div>
+            
             <div class="row split">
               <button class="btn ghost" id="useMyLocationAsStop">Konumumu Durak Yap</button>
               <button class="btn primary" id="saveEmployeeStop">Seçili Noktayı Kaydet</button>
@@ -94,22 +87,12 @@
           </div>
 
           <div class="panel-card">
-            <div class="card-title">Günlük Durum (Bugün)</div>
-            <div class="row">
-              <div class="label">Durum Notu</div>
-              <input class="input" id="dailyNoteInput" placeholder="örnek: Yıllık izin" />
-            </div>
+            <div class="card-title">Günlük Durum</div>
             <div class="employee-list" id="employeeList">Eleman kaydı yok.</div>
-            <div class="hint">Her satırda Yukarı/Aşağı ile rota sırası, Gelecek/Gelmeyecek ve Sil işlemleri var.</div>
+            <div class="hint">Her satırda + (Yukarı), - (Aşağı), Tik, Çarpı ve Sil butonları var.</div>
           </div>
 
-          <div class="panel-card">
-            <div class="card-title">Eleman Ekranı</div>
-            <div class="row">
-              <div class="label">Takip Sayfası</div>
-              <div class="value"><a class="link" href="index.html">index.html</a></div>
-            </div>
-          </div>
+          
         </aside>
       </section>
     </main>

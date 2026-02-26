@@ -17,7 +17,6 @@ const els = {
   useMyLocationAsStop: document.getElementById("useMyLocationAsStop"),
   saveEmployeeStop: document.getElementById("saveEmployeeStop"),
   clearFormBtn: document.getElementById("clearFormBtn"),
-  dailyNoteInput: document.getElementById("dailyNoteInput"),
   employeeList: document.getElementById("employeeList"),
   logoSwitch: document.getElementById("driverLogoSwitch"),
   tabMap: document.getElementById("driverTabMap"),
@@ -131,11 +130,21 @@ function basePath() {
 
 function setStatus(text) {
   els.status.textContent = text;
-  els.status.style.background = text === "LIVE"
-    ? "rgba(43, 179, 163, 0.2)"
-    : text === "BAGLI"
-      ? "rgba(244, 163, 0, 0.25)"
-      : "rgba(17, 24, 39, 0.08)";
+  if (text === "LIVE") {
+    els.status.style.background = "linear-gradient(145deg, rgba(48, 209, 88, 0.26), rgba(48, 209, 88, 0.14))";
+    els.status.style.borderColor = "rgba(48, 209, 88, 0.45)";
+    els.status.style.color = "#176f36";
+    return;
+  }
+  if (text === "BAGLI") {
+    els.status.style.background = "linear-gradient(145deg, rgba(255, 159, 10, 0.28), rgba(255, 159, 10, 0.14))";
+    els.status.style.borderColor = "rgba(255, 159, 10, 0.45)";
+    els.status.style.color = "#9a4f00";
+    return;
+  }
+  els.status.style.background = "linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.34))";
+  els.status.style.borderColor = "rgba(255, 255, 255, 0.72)";
+  els.status.style.color = "#3c3c43";
 }
 
 function setNote(text) {
@@ -455,7 +464,7 @@ function renderEmployeeList() {
   els.employeeList.innerHTML = "";
 
   if (!employees.length) {
-    els.employeeList.textContent = "Eleman kaydÄ± yok.";
+    els.employeeList.textContent = "Eleman kaydı yok.";
     updateSummary();
     renderEmployeeMarkers();
     return;
@@ -468,46 +477,41 @@ function renderEmployeeList() {
     const row = document.createElement("div");
     row.className = "employee-row";
 
-    const head = document.createElement("div");
-    head.className = "employee-head";
+    const headline = document.createElement("div");
+    headline.className = "employee-headline";
+
+    const order = document.createElement("div");
+    order.className = "order-chip";
+    order.textContent = String(index + 1);
 
     const name = document.createElement("div");
     name.className = "employee-name";
     name.textContent = employee.name;
 
-    const badge = document.createElement("div");
-    badge.className = `badge ${activeToday ? "coming" : "absent"}`;
-    badge.textContent = activeToday ? "Gelecek" : "Gelmeyecek";
-
-    head.appendChild(name);
-    head.appendChild(badge);
-
-    const meta = document.createElement("div");
-    meta.className = "employee-meta";
-    const noteParts = [`Sira: ${index + 1}`, formatCoord(employee.lat, employee.lng)];
-    if (employee.phone) noteParts.push(`Tel: ${employee.phone}`);
-    if (employee.note) noteParts.push(`Durak notu: ${employee.note}`);
-    if (attendance && attendance.note) noteParts.push(`Bugun notu: ${attendance.note}`);
-    meta.textContent = noteParts.join(" | ");
+    const status = document.createElement("div");
+    status.className = `badge ${activeToday ? "coming" : "absent"}`;
+    status.textContent = activeToday ? "Geliyor" : "Gelmiyor";
 
     const actions = document.createElement("div");
     actions.className = "employee-actions";
+    actions.style.gap = "1px";
 
-    const upButton = buildActionButton("YukarÄ±", "ghost", "route-up", employee.id);
+    const upButton = buildActionButton("+", "ghost", "route-up", employee.id, "Yukarı");
     upButton.disabled = index === 0;
     actions.appendChild(upButton);
 
-    const downButton = buildActionButton("AÅŸaÄŸÄ±", "ghost", "route-down", employee.id);
+    const downButton = buildActionButton("-", "ghost", "route-down", employee.id, "Aşağı");
     downButton.disabled = index === employees.length - 1;
     actions.appendChild(downButton);
 
-    actions.appendChild(buildActionButton("Duzenle", "ghost", "edit", employee.id));
-    actions.appendChild(buildActionButton("Gelecek", "primary", "coming", employee.id));
-    actions.appendChild(buildActionButton("Gelmeyecek", "ghost", "absent", employee.id));
-    actions.appendChild(buildActionButton("Sil", "ghost", "remove", employee.id));
+    actions.appendChild(buildActionButton("\u2713", "primary", "coming", employee.id, "Gelecek"));
+    actions.appendChild(buildActionButton("\u2715", "ghost", "absent", employee.id, "Gelmeyecek"));
+    actions.appendChild(buildActionButton("Sil", "ghost", "remove", employee.id, "Sil"));
 
-    row.appendChild(head);
-    row.appendChild(meta);
+    headline.appendChild(order);
+    headline.appendChild(name);
+    headline.appendChild(status);
+    row.appendChild(headline);
     row.appendChild(actions);
     els.employeeList.appendChild(row);
   }
@@ -516,13 +520,17 @@ function renderEmployeeList() {
   renderEmployeeMarkers();
 }
 
-function buildActionButton(label, type, action, employeeId) {
+function buildActionButton(label, type, action, employeeId, title = "") {
   const button = document.createElement("button");
   button.className = `btn ${type} tiny`;
   button.type = "button";
   button.dataset.action = action;
   button.dataset.employeeId = employeeId;
   button.textContent = label;
+  if (title) {
+    button.title = title;
+    button.setAttribute("aria-label", title);
+  }
   return button;
 }
 
@@ -930,7 +938,7 @@ async function updateAttendance(employeeId, willRide) {
     return;
   }
 
-  const note = (els.dailyNoteInput.value || "").trim();
+  const note = String((state.attendance[employeeId] && state.attendance[employeeId].note) || "");
   const path = `${basePath()}/attendance/${todayKey()}/${employeeId}`;
   try {
     await firebase.set(firebase.ref(state.firebaseDb, path), {
@@ -987,10 +995,6 @@ function onEmployeeListClick(event) {
   const employeeId = button.dataset.employeeId;
   const action = button.dataset.action;
 
-  if (action === "edit") {
-    loadEmployeeIntoForm(employeeId);
-    return;
-  }
   if (action === "route-up") {
     moveRouteOrder(employeeId, "up");
     return;
@@ -1011,4 +1015,3 @@ function onEmployeeListClick(event) {
     removeEmployee(employeeId);
   }
 }
-
