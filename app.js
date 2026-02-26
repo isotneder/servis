@@ -52,11 +52,6 @@ const state = {
   bus: null,
   user: null,
   busSpeedKmh: null,
-  employees: {},
-  attendance: {},
-  announceAt: 0,
-  announced: false,
-  lastAnnouncedTargetKey: null,
   driverOfflineReason: "",
   driverOfflineAnnounced: false,
   driverSharingActive: null,
@@ -65,8 +60,7 @@ const state = {
   firebaseDb: null,
   firebaseFns: null,
   liveUnsub: null,
-  employeesUnsub: null,
-  attendanceUnsub: null,
+  approachAlertActive: false,
   shareMonitorTimer: null,
   lastBusPoint: null,
   lastLiveTs: 0,
@@ -89,7 +83,6 @@ const busIcon = L.divIcon({ className: "marker bus" });
 const userIcon = L.divIcon({ className: "marker user" });
 const busMarker = L.marker([defaultCenter.lat, defaultCenter.lng], { icon: busIcon });
 const userMarker = L.marker([defaultCenter.lat, defaultCenter.lng], { icon: userIcon });
-const stopLayer = L.layerGroup().addTo(map);
 
 const initialRadius = storage.getNumber("ak.radius", announceRadius);
 if (els.radiusInput) {
@@ -118,6 +111,14 @@ if (els.radiusInput) {
     updateMetrics();
   });
 }
+if (els.voiceToggle) {
+  els.voiceToggle.addEventListener("change", () => {
+    if (!els.voiceToggle.checked) {
+      stopApproachAlertLoop();
+    }
+    updateMetrics();
+  });
+}
 if (els.testVoice) {
   els.testVoice.addEventListener("click", () => speak("Servis yaklaştı. Hazır ol."));
 }
@@ -129,21 +130,12 @@ setupLogoSwitch("driver.html");
 setMapType(loadMapTypePreference());
 setHomeView(loadHomeViewPreference());
 
-renderStops();
 updateMetrics();
 
 if (config.firebase && config.firebase.enabled) {
   connectFirebaseAuto();
 } else {
   setMode("idle");
-}
-
-function todayKey() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 function setSystemNote(message) {
@@ -273,74 +265,6 @@ function setMode(mode) {
   }
 }
 
-function normalizeEmployees(raw) {
-  const normalized = {};
-  if (!raw || typeof raw !== "object") {
-    return normalized;
-  }
-  for (const [id, value] of Object.entries(raw)) {
-    if (!value || !Number.isFinite(Number(value.lat)) || !Number.isFinite(Number(value.lng))) {
-      continue;
-    }
-    const name = String(value.name || "").trim();
-    if (!name) {
-      continue;
-    }
-    normalized[id] = {
-      id,
-      name,
-      lat: Number(value.lat),
-      lng: Number(value.lng),
-      phone: String(value.phone || ""),
-      note: String(value.note || ""),
-      createdAt: Number(value.createdAt || 0),
-      routeOrder: Number(value.routeOrder || 0)
-    };
-  }
-  return normalized;
-}
-
-function normalizeAttendance(raw) {
-  const normalized = {};
-  if (!raw || typeof raw !== "object") {
-    return normalized;
-  }
-  for (const [employeeId, value] of Object.entries(raw)) {
-    normalized[employeeId] = {
-      willRide: value && value.willRide !== false,
-      note: String((value && value.note) || ""),
-      updatedAt: Number((value && value.updatedAt) || 0)
-    };
-  }
-  return normalized;
-}
-
-function sortedEmployees() {
-  return Object.values(state.employees).sort((a, b) => a.name.localeCompare(b.name, "tr"));
-}
-
-function getAttendance(employeeId) {
-  return state.attendance[employeeId] || null;
-}
-
-function isEmployeeActiveToday(employeeId) {
-  const record = getAttendance(employeeId);
-  return !record || record.willRide !== false;
-}
-
-function renderStops() {
-  stopLayer.clearLayers();
-  const employees = sortedEmployees();
-  for (const employee of employees) {
-    const activeToday = isEmployeeActiveToday(employee.id);
-    const extraClass = activeToday ? "active" : "passive";
-    const icon = L.divIcon({ className: `marker stop ${extraClass}` });
-    const marker = L.marker([employee.lat, employee.lng], { icon }).addTo(stopLayer);
-    const statusText = activeToday ? "gelecek" : "gelmeyecek";
-    marker.bindTooltip(`${employee.name} (${statusText})`, { direction: "top", offset: [0, -8] });
-  }
-}
-
 function startUserTracking() {
   if (!navigator.geolocation) {
     setSystemNote("Tarayici konum destegi yok.");
@@ -421,94 +345,49 @@ function setBusLocation(latlng, sourceTs) {
   updateMetrics();
 }
 
-function getNearestActiveStop() {
-  if (!state.bus) {
-    return null;
-  }
-  let nearest = null;
-  for (const employee of sortedEmployees()) {
-    if (!isEmployeeActiveToday(employee.id)) {
-      continue;
-    }
-    const distance = distanceMeters(state.bus, employee);
-    if (!nearest || distance < nearest.distance) {
-      nearest = { employee, distance };
-    }
-  }
-  return nearest;
-}
-
-function getTarget() {
-  const nearest = getNearestActiveStop();
-  if (!nearest) {
-    return {
-      kind: "none",
-      key: null,
-      name: null,
-      stop: null,
-      distance: null
-    };
-  }
-
-  return {
-    kind: "nearest",
-    key: nearest.employee.id,
-    name: nearest.employee.name,
-    stop: nearest.employee,
-    distance: nearest.distance
-  };
-}
-
 function updateMetrics() {
-  const target = getTarget();
   const radius = Number(els.radiusInput ? els.radiusInput.value : announceRadius);
 
-  if (els.targetStopText && target.stop) {
-    els.targetStopText.textContent = `Hedef durak: ${target.name}`;
-  } else if (els.targetStopText && state.user) {
-    els.targetStopText.textContent = "Hedef durak: Konumum";
+  if (els.targetStopText && state.user) {
+    els.targetStopText.textContent = "Hedef konum: Konumum";
   } else if (els.targetStopText) {
-    els.targetStopText.textContent = "Hedef durak: --";
+    els.targetStopText.textContent = "Hedef konum: Konumu ac";
   }
 
   if (state.driverOfflineReason) {
+    stopApproachAlertLoop();
     if (els.distanceValue) els.distanceValue.textContent = "--";
     if (els.etaValue) els.etaValue.textContent = "Tahmini Varış: --";
     if (els.alertStatus) els.alertStatus.textContent = "Şoför konum paylaşmıyor";
     return;
   }
 
+  if (!state.user) {
+    stopApproachAlertLoop();
+    if (els.distanceValue) els.distanceValue.textContent = "--";
+    if (els.etaValue) els.etaValue.textContent = "Tahmini Varış: --";
+    if (els.alertStatus) els.alertStatus.textContent = "Konumunu ac";
+    return;
+  }
+
   if (!state.bus) {
+    stopApproachAlertLoop();
     if (els.distanceValue) els.distanceValue.textContent = "--";
     if (els.etaValue) els.etaValue.textContent = "Tahmini Varış: --";
-    if (els.alertStatus) els.alertStatus.textContent = "Beklemede";
+    if (els.alertStatus) els.alertStatus.textContent = "Servis bekleniyor";
     return;
   }
 
-  let distance = target.distance;
-  if (!target.stop && state.user) {
-    distance = distanceMeters(state.bus, state.user);
-  }
-
-  if (!Number.isFinite(distance)) {
-    if (els.distanceValue) els.distanceValue.textContent = "--";
-    if (els.etaValue) els.etaValue.textContent = "Tahmini Varış: --";
-    if (els.alertStatus) els.alertStatus.textContent = "Durak bekleniyor";
-    state.announced = false;
-    state.lastAnnouncedTargetKey = null;
-    return;
-  }
-
+  const distance = distanceMeters(state.bus, state.user);
   if (els.distanceValue) els.distanceValue.textContent = formatDistance(distance);
   if (els.etaValue) els.etaValue.textContent = `Tahmini Varış: ${formatEta(distance)}`;
 
   if (distance <= radius) {
     if (els.alertStatus) els.alertStatus.textContent = "Yakın";
-    maybeAnnounceStop(target.key, target.name || "durak");
+    startApproachAlertLoop();
   } else {
+    stopApproachAlertLoop();
     if (els.alertStatus) els.alertStatus.textContent = "Beklemede";
-    state.announced = false;
-    state.lastAnnouncedTargetKey = null;
   }
 }
 
@@ -548,16 +427,40 @@ function distanceMeters(a, b) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-function maybeAnnounceStop(targetKey, targetName) {
+function startApproachAlertLoop() {
   if (!els.voiceToggle || !els.voiceToggle.checked) return;
-  const now = Date.now();
-  const isNewTarget = targetKey && targetKey !== state.lastAnnouncedTargetKey;
-  if (!state.announced || isNewTarget || now - state.announceAt > 120000) {
-    speak(`${targetName} durağına yaklaşılıyor.`);
-    state.announced = true;
-    state.announceAt = now;
-    state.lastAnnouncedTargetKey = targetKey;
+  if (state.approachAlertActive) return;
+  state.approachAlertActive = true;
+  speakApproachLoop();
+}
+
+function stopApproachAlertLoop() {
+  if (!state.approachAlertActive) return;
+  state.approachAlertActive = false;
+  if ("speechSynthesis" in window) {
+    speechSynthesis.cancel();
   }
+}
+
+function speakApproachLoop() {
+  if (!state.approachAlertActive || !els.voiceToggle || !els.voiceToggle.checked) {
+    return;
+  }
+  const utterance = createUtterance("Şoför yaklaştı.");
+  if (!utterance) {
+    state.approachAlertActive = false;
+    return;
+  }
+  utterance.onend = () => {
+    speakApproachLoop();
+  };
+  utterance.onerror = () => {
+    if (!state.approachAlertActive) {
+      return;
+    }
+    setTimeout(() => speakApproachLoop(), 80);
+  };
+  speechSynthesis.speak(utterance);
 }
 
 function maybeAnnounceDriverOffline() {
@@ -567,10 +470,22 @@ function maybeAnnounceDriverOffline() {
   state.driverOfflineAnnounced = true;
 }
 
-function speak(text) {
+function speak(text, options = {}) {
+  const skipIfBusy = !!options.skipIfBusy;
+  const utterance = createUtterance(text);
+  if (!utterance) {
+    return;
+  }
+  if (skipIfBusy && (speechSynthesis.speaking || speechSynthesis.pending)) {
+    return;
+  }
+  speechSynthesis.speak(utterance);
+}
+
+function createUtterance(text) {
   if (!("speechSynthesis" in window)) {
     setSystemNote("Tarayici ses destegi yok.");
-    return;
+    return null;
   }
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "tr-TR";
@@ -579,16 +494,13 @@ function speak(text) {
   if (trVoice) {
     utterance.voice = trVoice;
   }
-  speechSynthesis.speak(utterance);
+  return utterance;
 }
 
 function centerMap() {
   const points = [];
   if (state.bus) points.push([state.bus.lat, state.bus.lng]);
   if (state.user) points.push([state.user.lat, state.user.lng]);
-  for (const employee of sortedEmployees()) {
-    points.push([employee.lat, employee.lng]);
-  }
   if (!points.length) {
     map.setView([defaultCenter.lat, defaultCenter.lng], defaultZoom);
     return;
@@ -648,14 +560,6 @@ function stopFirebaseSubscriptions() {
     state.liveUnsub();
     state.liveUnsub = null;
   }
-  if (state.employeesUnsub) {
-    state.employeesUnsub();
-    state.employeesUnsub = null;
-  }
-  if (state.attendanceUnsub) {
-    state.attendanceUnsub();
-    state.attendanceUnsub = null;
-  }
 }
 
 function stopShareMonitor() {
@@ -676,6 +580,7 @@ function setDriverOffline(reason) {
   if (reasonChanged) {
     state.driverOfflineAnnounced = false;
   }
+  stopApproachAlertLoop();
   clearBusLocation();
   setMode("offline");
   if (reasonChanged) {
@@ -719,11 +624,8 @@ async function connectFirebaseAuto() {
   try {
     const firebase = await ensureFirebase();
 
-    state.employees = {};
-    state.attendance = {};
     state.driverSharingActive = null;
     state.lastLiveTs = 0;
-    renderStops();
     updateMetrics();
 
     const basePath = `${config.firebase.busPath || "buses"}/${serviceId}`;
@@ -776,32 +678,8 @@ async function connectFirebaseAuto() {
       }
     );
 
-    state.employeesUnsub = firebase.onValue(
-      firebase.ref(state.firebaseDb, `${basePath}/employees`),
-      (snapshot) => {
-        state.employees = normalizeEmployees(snapshot.val());
-        renderStops();
-        updateMetrics();
-      },
-      (error) => {
-        setSystemNote(`Eleman verisi hatasi: ${error.message}`);
-      }
-    );
-
-    state.attendanceUnsub = firebase.onValue(
-      firebase.ref(state.firebaseDb, `${basePath}/attendance/${todayKey()}`),
-      (snapshot) => {
-        state.attendance = normalizeAttendance(snapshot.val());
-        renderStops();
-        updateMetrics();
-      },
-      (error) => {
-        setSystemNote(`Durum verisi hatası: ${error.message}`);
-      }
-    );
-
     setMode("live");
-    setSystemNote("Tek servis canlı verisi izleniyor.");
+    setSystemNote("Canli servis verisi izleniyor.");
     startShareMonitor();
     evaluateDriverSharing();
   } catch (error) {
